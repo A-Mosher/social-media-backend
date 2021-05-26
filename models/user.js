@@ -6,6 +6,24 @@ const auth = require('..middleware/auth');
 const express = require('express');
 const router = express.Router();
 
+//new profile post endpoint
+router.post('/:userId/:profileId', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(400).send(`The user with id "${req.params.userId}" does not exist.`);
+
+        const product = await Product.findById(req.params.productId);
+        if (!product) return res.status(400).send(`The product with id "${req.params.productId}" does not exist.`);
+
+        user.shoppingCart.push(product);
+
+        await user.save();
+        return res.send(user.shoppingCart);
+    }   catch (ex) {
+        return res.status(500).send(`Internal Server Error: ${ex}`);
+    }
+});
+
 
 //new user post endpoint
 router.post('/', async (req, res) => {
@@ -38,10 +56,12 @@ router.post('/', async (req, res) => {
 });
 
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, minlength: 5, maxlength:50 },
+    userName: { type: String, required: true, minlength: 5, maxlength:50 },
+    firstName: { type: String, required: true, minlength: 2, maxlength: 255 },
+    lastName: { type: String, required: true, minlength: 2, maxlength: 255 },
     email: { type: String, unique: true, required: true, minlength: 5, maxlength: 255 },
     password: { type: String, required: true, maxlength: 1024, minlength: 5 },
-    isAdmin: { type: Boolean, default: false },
+    //friends:
 });
 
 userSchema.methods.generateAuthToken = function () {
