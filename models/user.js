@@ -5,24 +5,7 @@ const bcrypt = require('bcrypt');
 const auth = require('..middleware/auth');
 const express = require('express');
 const router = express.Router();
-
-//new profile post endpoint
-router.post('/:userId/:profileId', auth, async (req, res) => {
-    try {
-        const user = await User.findById(req.params.userId);
-        if (!user) return res.status(400).send(`The user with id "${req.params.userId}" does not exist.`);
-
-        const product = await Product.findById(req.params.productId);
-        if (!product) return res.status(400).send(`The product with id "${req.params.productId}" does not exist.`);
-
-        user.shoppingCart.push(product);
-
-        await user.save();
-        return res.send(user.shoppingCart);
-    }   catch (ex) {
-        return res.status(500).send(`Internal Server Error: ${ex}`);
-    }
-});
+const { commentSchema } = require('./models/comment');
 
 
 //new user post endpoint
@@ -61,7 +44,8 @@ const userSchema = new mongoose.Schema({
     lastName: { type: String, required: true, minlength: 2, maxlength: 255 },
     email: { type: String, unique: true, required: true, minlength: 5, maxlength: 255 },
     password: { type: String, required: true, maxlength: 1024, minlength: 5 },
-    //friends:
+    friends: { type: [], default: [] },
+    comments: { type: [commentSchema], default: [] },
 });
 
 userSchema.methods.generateAuthToken = function () {
@@ -72,7 +56,7 @@ const User = mongoose.model('User', userSchema);
 
 function validateUser(user) {
     const schema = Joi.object({
-        name: Joi.string().min(5).max(50).required(),
+        userName: Joi.string().min(5).max(50).required(),
         email: Joi.string().min(5).max(255).required().email(),
         password: Joi.string().min(5).max(1024).required(),
     });
